@@ -1,4 +1,5 @@
 import pickle
+import wolframalpha
 from random import randint
 
 import wolframalpha
@@ -75,6 +76,13 @@ async def delcom(client, message):
                 pickle.dump(custom_commands, f)
 
             return "Command deleted."
+
+
+async def willie(client, message):
+    app_id = config.config_get('alpha', 'app_id')
+    alpha_client = wolframalpha.Client(app_id)
+    res = alpha_client.query(message)
+    return next(res.results).text
 
 
 async def eight_ball(client, message):
