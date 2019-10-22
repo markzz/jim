@@ -302,7 +302,7 @@ async def story(client, message):
                          if word is not ' ' and word is not '']
                 READ_BOOKS.append(bookname)
                 STORY_TIME_MARKOV.learn(words)
-    return ' '.join(next(m.chains()))
+    return ' '.join(next(STORY_TIME_MARKOV.chains()))
 
 
 async def wolfram(client, message):
