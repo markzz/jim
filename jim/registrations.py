@@ -20,9 +20,11 @@ def register_cmds():
     register_cmd("ping", "Ping the bot.", None, 1, cmd_funcs.ping, False)
     register_cmd("prefix", "Change command prefix", ADMINISTRATOR_PERM, 1, cmd_funcs.prefix, False)
     register_cmd("wa", "Ask Wolfram Alpha a question.", None, 2, cmd_funcs.wolfram, False)
+    register_cmd("story", "Have the bot read a randomized story", None, 1, cmd_funcs.story, False)
 
 
 def register_patterns():
+    # TODO: Remind mark to do this
     # TODO: Write documentation on how to make patterns and what all can be done here.
     register_pattern(r'%%name%%.*\?', cmd_funcs.eight_ball)
     register_pattern(r'hi %%name%%!', cmd_funcs.hello_jim)
