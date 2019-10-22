@@ -10,6 +10,10 @@ from jim import config, markov, minecraft
 from jim.util import util, DB
 
 
+STORY_TIME_MARKOV = Markov(_stop_condition)
+READ_BOOKS = []
+
+
 async def _get_log(client, channel):
     logs = client.logs_from(channel, limit=2 ** 32)
     log = []
@@ -42,6 +46,18 @@ async def _get_log(client, channel):
 
     with open(channel.guild.name + "-" + channel.name + ".json", "w") as f:
         json.dump(log, f)
+
+
+def _stop_condition(words):
+    # Set a hard limit at 50 so this cannot run forever
+    if len(words) > 50:
+        words[0] = words[0].capitalize()
+        return True
+    # End the chain if its greater than 15 words and ends in '.',  '?' or '!'
+    elif len(words) > 15 and ('.' in words[-1]) or ('?' in words[-1]) or ('!' in words[-1]):
+        words[0] = words[0].capitalize()
+        return True
+    return False
 
 
 async def addadmin(client, message):
@@ -256,6 +272,39 @@ async def prefix(client, message):
     return "Updated prefix to %s" % (splitmsg[1][0],)
 
 
+async def story(client, message):
+    translation_table = str.maketrans({
+        ',': '',
+        '(': '',
+        ')': '',
+        '{': '',
+        '}': '',
+        '[': '',
+        ']': '',
+        '|': '',
+        '"': '',
+        ':': '',
+        ';': '',
+        "'": '',
+        '/': '',
+        '_': '',
+        '\\': '',
+        '\n': ' ',
+        '\t': ' ',
+    })
+
+    books_dir = config.config_get('story', 'books_dir')
+    for bookname in [file for file in os.scandir(books_dir) if file.is_file()]:
+        if bookname not in READ_BOOKS:
+            with open(bookname, 'r') as fin:
+                source = fin.read()
+                words = [word for word in source.translate(translation_table).split(' ')
+                         if word is not ' ' and word is not '']
+                READ_BOOKS.append(bookname)
+                STORY_TIME_MARKOV.learn(words)
+    return ' '.join(next(m.chains()))
+
+
 async def wolfram(client, message):
     app_id = config.config_get('alpha', 'app_id')
     alpha_client = wolframalpha.Client(app_id)
@@ -270,50 +319,3 @@ async def wolfram(client, message):
         return "Not even %s knows." % (util.get_bot_name(message),)
 
     return '```\n' + '\n'.join(results) + '\n```'
-
-
-translation_table = str.maketrans({
-    ',': '',
-    '(': '',
-    ')': '',
-    '{': '',
-    '}': '',
-    '[': '',
-    ']': '',
-    '|': '',
-    '"': '',
-    ':': '',
-    ';': '',
-    "'": '',
-    '/': '',
-    '_': '',
-    '\\': '',
-    '\n': ' ',
-    '\t': ' ',
-})
-
-books_dir = config.config_get('story', 'books_dir')
-
-def stop_condition(words):
-    # Set a hard limit at 50 so this cannot run forever
-    if len(words) > 50:
-        words[0] = words[0].capitalize()
-        return True
-    # End the chain if its greater than 15 words and ends in '.',  '?' or '!'
-    elif len(words) > 15 and ('.' in words[-1]) or ('?' in words[-1]) or ('!' in words[-1]):
-        words[0] = words[0].capitalize()
-        return True
-    return False
-
-m = Markov(stop_condition)
-
-for bookname in [file for file in os.scandir(books_dir) if file.is_file()]:
-    with open(bookname, 'r') as fin:
-        source = fin.read()
-        words = [word for word in source.translate(translation_table).split(' ')
-                 if word is not ' ' and word is not '']
-        m.learn(words)
-
-
-async def story(client, message):
-    return ' '.join(next(m.chains()))
