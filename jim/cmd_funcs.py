@@ -10,8 +10,8 @@ from jim import config, markov, minecraft
 from jim.util import util, DB
 
 
-STORY_TIME_MARKOV = Markov(_stop_condition)
-READ_BOOKS = []
+_STORY_TIME_MARKOV = Markov(_stop_condition)
+_READ_BOOKS = []
 
 
 async def _get_log(client, channel):
@@ -53,10 +53,11 @@ def _stop_condition(words):
     if len(words) > 50:
         words[0] = words[0].capitalize()
         return True
-    # End the chain if its greater than 15 words and ends in '.',  '?' or '!'
-    elif len(words) > 15 and ('.' in words[-1]) or ('?' in words[-1]) or ('!' in words[-1]):
+    elif len(words) > 15 and '.' in words[-1] or '?' in words[-1] or '!' in words[-1]:
+        # End the chain if its greater than 15 words and ends in '.',  '?' or '!'
         words[0] = words[0].capitalize()
         return True
+
     return False
 
 
@@ -295,14 +296,15 @@ async def story(client, message):
 
     books_dir = config.config_get('story', 'books_dir')
     for bookname in [file for file in os.scandir(books_dir) if file.is_file()]:
-        if bookname not in READ_BOOKS:
+        if bookname not in _READ_BOOKS:
             with open(bookname, 'r') as fin:
                 source = fin.read()
                 words = [word for word in source.translate(translation_table).split(' ')
                          if word is not ' ' and word is not '']
-                READ_BOOKS.append(bookname)
-                STORY_TIME_MARKOV.learn(words)
-    return ' '.join(next(STORY_TIME_MARKOV.chains()))
+                _READ_BOOKS.append(bookname)
+                _STORY_TIME_MARKOV.learn(words)
+
+    return ' '.join(next(_STORY_TIME_MARKOV.chains()))
 
 
 async def wolfram(client, message):
