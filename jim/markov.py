@@ -29,7 +29,6 @@ class Markov():
     def _get_starting_symbol(self):
         if self._starting_symbols:
             starting_symbol = random.choice(self._starting_symbols)
-
             return random.choice(self._memory[starting_symbol])
         else:
             return random.choice(list(self._memory.keys()))
